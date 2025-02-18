@@ -1,0 +1,144 @@
+// src/components/DensityDependence.jsx
+import React, { useState } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine } from 'recharts';
+import { Info } from 'lucide-react';
+
+const DensityDependence = () => {
+  const [bMax, setBMax] = useState(4.96);
+  const [dMin, setDMin] = useState(0);
+  const [a, setA] = useState(0.0515);
+  const [c, setC] = useState(0.0515);
+  const [showInfoBox, setShowInfoBox] = useState(true);
+
+  // Generate data for birth/death rates
+  const generateRateData = () => {
+    const data = [];
+    for (let N = 0; N <= 100; N += 5) {
+      const birthRate = Math.max(0, bMax - a * N);
+      const deathRate = Math.max(0, dMin + c * N);
+      data.push({
+        N,
+        birthRate,
+        deathRate,
+        netGrowth: birthRate - deathRate
+      });
+    }
+    return data;
+  };
+
+  const rateData = generateRateData();
+  const K = (bMax - dMin) / (a + c);
+
+  return (
+    <div className="w-full max-w-4xl mx-auto p-4">
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold">Population Density Dependence Simulator</h1>
+          <button 
+            onClick={() => setShowInfoBox(!showInfoBox)}
+            className="p-2 rounded-full hover:bg-gray-100"
+          >
+            <Info size={20} />
+          </button>
+        </div>
+
+        {showInfoBox && (
+          <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+            <p className="text-sm text-blue-800">
+              This simulator demonstrates how birth and death rates change with population density, 
+              and how these changes lead to population regulation. Adjust the sliders to see how 
+              different parameters affect population dynamics.
+            </p>
+          </div>
+        )}
+
+        <div className="mb-8">
+          <LineChart width={700} height={400} data={rateData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis 
+              label={{ value: 'Population Size (N)', position: 'bottom', offset: -5 }}
+              dataKey="N" 
+            />
+            <YAxis 
+              label={{ value: 'Rate', angle: -90, position: 'insideLeft' }}
+            />
+            <Tooltip />
+            <Legend />
+            <ReferenceLine x={K} stroke="#666" strokeDasharray="3 3" />
+            <Line 
+              type="monotone" 
+              dataKey="birthRate" 
+              stroke="#2563eb" 
+              name="Birth Rate"
+              strokeWidth={2}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="deathRate" 
+              stroke="#dc2626" 
+              name="Death Rate"
+              strokeWidth={2}
+            />
+          </LineChart>
+        </div>
+
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Maximum Birth Rate (b_max): {bMax.toFixed(2)}
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="10"
+              step="0.1"
+              value={bMax}
+              onChange={(e) => setBMax(Number(e.target.value))}
+              className="w-full"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Birth Rate Density Dependence (a): {a.toFixed(4)}
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="0.2"
+              step="0.001"
+              value={a}
+              onChange={(e) => setA(Number(e.target.value))}
+              className="w-full"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Death Rate Density Dependence (c): {c.toFixed(4)}
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="0.2"
+              step="0.001"
+              value={c}
+              onChange={(e) => setC(Number(e.target.value))}
+              className="w-full"
+            />
+          </div>
+
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+            <p className="font-medium">Carrying Capacity (K) = {K.toFixed(1)}</p>
+            <p className="text-sm text-gray-600 mt-2">
+              The carrying capacity is the population size where birth rate equals death rate.
+              At this point, the population growth rate (ΔN) is zero.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DensityDependence;
